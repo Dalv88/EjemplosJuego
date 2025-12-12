@@ -110,24 +110,50 @@ public:
 
 // Clase Enemigo
 class Enemy {
+private:
+    static sf::Texture texture0;
+    static sf::Texture texture1;
+    static sf::Texture texture2;
+    static sf::Texture texture3;
+    static bool texturesLoaded;
+    
 public:
     sf::Sprite sprite;
-    sf::Texture texture;
     int points;
     sf::Clock shootCooldown;
     
+    static void loadTextures() {
+        if (!texturesLoaded) {
+            texture0.loadFromFile("docs/images/Human 1.png");
+            texture1.loadFromFile("docs/images/Human 2.png");
+            texture2.loadFromFile("docs/images/Human 3.png");
+            texture3.loadFromFile("docs/images/human 4.png");
+            texturesLoaded = true;
+        }
+    }
+    
     Enemy(float x, float y, int row) {
-        // Cargar la textura desde la imagen
-        if (!texture.loadFromFile("assets/images/nave.png")) {
-            std::cerr << "Error: No se pudo cargar assets/images/nave.png" << std::endl;
+        loadTextures();
+        
+        // Seleccionar la textura según la fila
+        sf::Texture* selectedTexture = nullptr;
+        switch(row) {
+            case 0: selectedTexture = &texture0; break;
+            case 1: selectedTexture = &texture1; break;
+            case 2: selectedTexture = &texture2; break;
+            case 3: selectedTexture = &texture3; break;
         }
         
-        sprite.setTexture(texture);
+        if (selectedTexture) {
+            sprite.setTexture(*selectedTexture);
+        }
         
-        // Escalar la imagen para que tenga un tamaño apropiado (30x25 pixeles)
-        float scaleX = 30.0f / texture.getSize().x;
-        float scaleY = 25.0f / texture.getSize().y;
-        sprite.setScale(scaleX, scaleY);
+        // Escalar la imagen para que tenga un tamaño apropiado (45x35 píxeles)
+        if (selectedTexture && selectedTexture->getSize().x > 0 && selectedTexture->getSize().y > 0) {
+            float scaleX = 45.0f / selectedTexture->getSize().x;
+            float scaleY = 35.0f / selectedTexture->getSize().y;
+            sprite.setScale(scaleX, scaleY);
+        }
         
         sprite.setPosition(x, y);
         points = (row + 1) * 10;
@@ -153,6 +179,13 @@ public:
         return sprite.getGlobalBounds();
     }
 };
+
+// Inicializar las texturas estáticas
+sf::Texture Enemy::texture0;
+sf::Texture Enemy::texture1;
+sf::Texture Enemy::texture2;
+sf::Texture Enemy::texture3;
+bool Enemy::texturesLoaded = false;
 
 // Clase Estructura de Protección
 class Bunker {
