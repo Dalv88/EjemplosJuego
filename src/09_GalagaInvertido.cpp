@@ -164,7 +164,7 @@ public:
     
     bool canShoot() {
         // Aumentar probabilidad de disparo según el nivel
-        float shootChance = 1.0f + (level * 0.5f); // Aumenta 50% por nivel
+        float shootChance = 1.0f + (level * 0.1f); // Aumenta 50% por nivel
         return shootCooldown.getElapsedTime().asSeconds() > (2.0f / shootChance) && (rand() % 100) < (int)shootChance;
     }
     
@@ -301,6 +301,28 @@ int main() {
     startText.setFillColor(sf::Color::Green);
     startText.setString("Presiona ENTER para iniciar");
     startText.setPosition(220, 350);
+    
+    // Textos de controles en pantalla de inicio
+    sf::Text controlText1;
+    controlText1.setFont(font);
+    controlText1.setCharacterSize(16);
+    controlText1.setFillColor(sf::Color::White);
+    controlText1.setString("Presiona [SPC] para disparar");
+    controlText1.setPosition(10, 10);
+    
+    sf::Text controlText3;
+    controlText3.setFont(font);
+    controlText3.setCharacterSize(16);
+    controlText3.setFillColor(sf::Color::White);
+    controlText3.setString("usa las [Flechas] para poder moverte");
+    controlText3.setPosition(10, 30);
+    
+    sf::Text controlText2;
+    controlText2.setFont(font);
+    controlText2.setCharacterSize(16);
+    controlText2.setFillColor(sf::Color::White);
+    controlText2.setString("Presiona [ESC] para pausar");
+    controlText2.setPosition(550, 10);
     
     // Textos del HUD
     sf::Text scoreText;
@@ -636,6 +658,9 @@ int main() {
         if (gameState == MENU) {
             window.draw(titleText);
             window.draw(startText);
+            window.draw(controlText1);
+            window.draw(controlText3);
+            window.draw(controlText2);
             gameOverSoundPlayed = false; // Reset para próximos Game Over
         }
         else if (gameState == PLAYING) {
