@@ -10,6 +10,7 @@
 enum GameState {
     MENU,
     PLAYING,
+    PAUSED,
     GAME_OVER
 };
 
@@ -270,6 +271,7 @@ int main() {
     int level = 1; // Nivel actual del juego
     bool levelTransition = false; // Pausa entre niveles
     sf::Clock levelTransitionClock; // Reloj para la pausa de nivel
+    bool escKeyPressed = false; // Rastrear si ESC estaba presionado
     
     // Jugador
     Player player;
@@ -347,6 +349,21 @@ int main() {
     restartText.setFillColor(sf::Color::Yellow);
     restartText.setString("R: Reiniciar | ESC: Menu");
     restartText.setPosition(240, 400);
+    
+    // Textos de Pausa
+    sf::Text pauseText;
+    pauseText.setFont(font);
+    pauseText.setCharacterSize(60);
+    pauseText.setFillColor(sf::Color::Yellow);
+    pauseText.setString("PAUSA");
+    pauseText.setPosition(280, 200);
+    
+    sf::Text resumeText;
+    resumeText.setFont(font);
+    resumeText.setCharacterSize(24);
+    resumeText.setFillColor(sf::Color::White);
+    resumeText.setString("Presiona ESC para continuar");
+    resumeText.setPosition(220, 350);
     
     // Función para inicializar el juego
     auto initGame = [&]() {
@@ -433,6 +450,17 @@ int main() {
                 if (gameState == MENU && event.key.code == sf::Keyboard::Enter) {
                     startSound.play(); // Reproducir sonido de inicio
                     initGame();
+                }
+                
+                // Pausa/Reanuda durante el juego (solo si ESC se presionó)
+                if ((gameState == PLAYING || gameState == PAUSED) && event.key.code == sf::Keyboard::Escape) {
+                    if (gameState == PLAYING) {
+                        gameState = PAUSED;
+                        music.pause();
+                    } else if (gameState == PAUSED) {
+                        gameState = PLAYING;
+                        music.play();
+                    }
                 }
                 
                 // Desde Game Over
@@ -638,6 +666,45 @@ int main() {
             window.draw(scoreText);
             window.draw(livesText);
             window.draw(levelText);
+        }
+        else if (gameState == PAUSED) {
+            // Mostrar el juego de fondo con pausa visual
+            // Dibujar jugador
+            window.draw(player.sprite);
+            
+            // Dibujar enemigos
+            for (auto& enemy : enemies) {
+                window.draw(enemy.sprite);
+            }
+            
+            // Dibujar bunkers
+            for (auto& bunker : bunkers) {
+                if (!bunker.isDestroyed()) {
+                    window.draw(bunker.shape);
+                }
+            }
+            
+            // Dibujar balas
+            for (auto& bullet : playerBullets) {
+                window.draw(bullet.shape);
+            }
+            for (auto& bullet : enemyBullets) {
+                window.draw(bullet.shape);
+            }
+            
+            // Dibujar HUD
+            window.draw(scoreText);
+            window.draw(livesText);
+            window.draw(levelText);
+            
+            // Dibujar pantalla de pausa con fondo oscuro (PRIMERO EL OVERLAY)
+            sf::RectangleShape pauseOverlay(sf::Vector2f(800, 600));
+            pauseOverlay.setFillColor(sf::Color(0, 0, 0, 200));  // Más oscuro para mejor visibilidad
+            window.draw(pauseOverlay);
+            
+            // LUEGO LOS TEXTOS (para que aparezcan sobre el overlay)
+            window.draw(pauseText);
+            window.draw(resumeText);
         }
         else if (gameState == GAME_OVER) {
             // Reproducir sonido de Game Over si aún no se ha reproducido
