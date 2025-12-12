@@ -121,6 +121,7 @@ public:
     sf::Sprite sprite;
     int points;
     sf::Clock shootCooldown;
+    int level;
     
     static void loadTextures() {
         if (!texturesLoaded) {
@@ -134,6 +135,7 @@ public:
     
     Enemy(float x, float y, int row) {
         loadTextures();
+        level = 1; // Se actualizará desde el juego principal
         
         // Seleccionar la textura según la fila
         sf::Texture* selectedTexture = nullptr;
@@ -160,7 +162,9 @@ public:
     }
     
     bool canShoot() {
-        return shootCooldown.getElapsedTime().asSeconds() > 2.0f && (rand() % 100) < 1;
+        // Aumentar probabilidad de disparo según el nivel
+        float shootChance = 1.0f + (level * 0.5f); // Aumenta 50% por nivel
+        return shootCooldown.getElapsedTime().asSeconds() > (2.0f / shootChance) && (rand() % 100) < (int)shootChance;
     }
     
     void resetShootCooldown() {
@@ -263,6 +267,9 @@ int main() {
     int score = 0;
     bool victory = false;
     bool gameOverSoundPlayed = false;
+    int level = 1; // Nivel actual del juego
+    bool levelTransition = false; // Pausa entre niveles
+    sf::Clock levelTransitionClock; // Reloj para la pausa de nivel
     
     // Jugador
     Player player;
@@ -306,6 +313,13 @@ int main() {
     livesText.setFillColor(sf::Color::White);
     livesText.setPosition(10, 35);
     
+    // Texto del nivel
+    sf::Text levelText;
+    levelText.setFont(font);
+    levelText.setCharacterSize(20);
+    levelText.setFillColor(sf::Color::Yellow);
+    levelText.setPosition(700, 10);
+    
     // Textos de Game Over
     sf::Text gameOverText;
     gameOverText.setFont(font);
@@ -339,6 +353,7 @@ int main() {
         gameState = PLAYING;
         score = 0;
         victory = false;
+        level = 1;
         enemyMoveX = 1.5f;
         
         // Reiniciar jugador
@@ -353,15 +368,53 @@ int main() {
         enemies.clear();
         for (int row = 0; row < 4; row++) {
             for (int col = 0; col < 8; col++) {
-                enemies.push_back(Enemy(
+                Enemy newEnemy(
                     100 + col * 80,
                     50 + row * 60,
                     row
-                ));
+                );
+                newEnemy.level = level;
+                enemies.push_back(newEnemy);
             }
         }
         
         // Crear bunkers
+        bunkers.clear();
+        for (int i = 0; i < 4; i++) {
+            bunkers.push_back(Bunker(100 + i * 180, 450));
+        }
+    };
+    
+    // Función para pasar al siguiente nivel
+    auto nextLevel = [&]() {
+        level++;
+        levelTransition = true;
+        levelTransitionClock.restart();
+        victorySound.play(); // Reproducir sonido de cambio de nivel
+        enemyMoveX *= 1.1f; // Aumentar velocidad de movimiento 10%
+        
+        // Reiniciar jugador (sin perder vidas)
+        player.sprite.setPosition(380, 540);
+        
+        // Limpiar balas
+        playerBullets.clear();
+        enemyBullets.clear();
+        
+        // Crear enemigos nuevamente
+        enemies.clear();
+        for (int row = 0; row < 4; row++) {
+            for (int col = 0; col < 8; col++) {
+                Enemy newEnemy(
+                    100 + col * 80,
+                    50 + row * 60,
+                    row
+                );
+                newEnemy.level = level;
+                enemies.push_back(newEnemy);
+            }
+        }
+        
+        // Crear bunkers nuevamente
         bunkers.clear();
         for (int i = 0; i < 4; i++) {
             bunkers.push_back(Bunker(100 + i * 180, 450));
@@ -395,45 +448,55 @@ int main() {
         
         // Lógica del juego
         if (gameState == PLAYING) {
-            // Controles del jugador
-            if (sf::Keyboard::isKeyPressed(sf::Keyboard::Left)) {
-                player.moveLeft();
-            }
-            if (sf::Keyboard::isKeyPressed(sf::Keyboard::Right)) {
-                player.moveRight();
-            }
-            if (sf::Keyboard::isKeyPressed(sf::Keyboard::Space)) {
-                if (player.canShoot()) {
-                    sf::Vector2f pos = player.getShootPosition();
-                    playerBullets.push_back(Bullet(pos.x, pos.y, true));
-                    player.resetShootCooldown();
+            // Verificar si la transición de nivel ha terminado
+            if (levelTransition) {
+                if (levelTransitionClock.getElapsedTime().asSeconds() >= 1.0f) {
+                    levelTransition = false;
                 }
             }
             
-            // Mover enemigos
-            bool changeDirection = false;
-            for (auto& enemy : enemies) {
-                enemy.sprite.move(enemyMoveX, 0);
-                sf::FloatRect bounds = enemy.sprite.getGlobalBounds();
-                if (enemy.sprite.getPosition().x <= 0 || 
-                    enemy.sprite.getPosition().x + bounds.width >= 800) {
-                    changeDirection = true;
+            // Si no estamos en transición de nivel, ejecutar la lógica
+            if (!levelTransition) {
+                // Controles del jugador
+                if (sf::Keyboard::isKeyPressed(sf::Keyboard::Left)) {
+                    player.moveLeft();
                 }
-            }
-            
-            if (changeDirection) {
-                enemyMoveX *= -1;
+                if (sf::Keyboard::isKeyPressed(sf::Keyboard::Right)) {
+                    player.moveRight();
+                }
+                if (sf::Keyboard::isKeyPressed(sf::Keyboard::Space)) {
+                    if (player.canShoot()) {
+                        sf::Vector2f pos = player.getShootPosition();
+                        playerBullets.push_back(Bullet(pos.x, pos.y, true));
+                        player.resetShootCooldown();
+                    }
+                }
+                
+                // Mover enemigos
+                bool changeDirection = false;
                 for (auto& enemy : enemies) {
-                    enemy.sprite.move(0, 10); // Bajar un poco
+                    enemy.sprite.move(enemyMoveX, 0);
+                    sf::FloatRect bounds = enemy.sprite.getGlobalBounds();
+                    if (enemy.sprite.getPosition().x <= 0 || 
+                        enemy.sprite.getPosition().x + bounds.width >= 800) {
+                        changeDirection = true;
+                    }
                 }
-            }
-            
-            // Enemigos disparan
-            for (auto& enemy : enemies) {
-                if (enemy.canShoot()) {
-                    sf::Vector2f pos = enemy.getShootPosition();
-                    enemyBullets.push_back(Bullet(pos.x, pos.y, false));
-                    enemy.resetShootCooldown();
+                
+                if (changeDirection) {
+                    enemyMoveX *= -1;
+                    for (auto& enemy : enemies) {
+                        enemy.sprite.move(0, 10); // Bajar un poco
+                    }
+                }
+                
+                // Enemigos disparan
+                for (auto& enemy : enemies) {
+                    if (enemy.canShoot()) {
+                        sf::Vector2f pos = enemy.getShootPosition();
+                        enemyBullets.push_back(Bullet(pos.x, pos.y, false));
+                        enemy.resetShootCooldown();
+                    }
                 }
             }
             
@@ -520,11 +583,9 @@ int main() {
                     ++itBullet;
             }
             
-            // Verificar victoria
+            // Verificar victoria (pasar al siguiente nivel)
             if (enemies.empty() && score > 0) {
-                gameState = GAME_OVER;
-                victory = true;
-                victorySound.play(); // Reproducir sonido de victoria
+                nextLevel();
             }
             
             // Verificar si los enemigos llegaron muy abajo
@@ -538,6 +599,7 @@ int main() {
             // Actualizar HUD
             scoreText.setString("Puntos: " + std::to_string(score));
             livesText.setString("Vidas: " + std::to_string(player.lives));
+            levelText.setString("Nivel: " + std::to_string(level));
         }
         
         // Renderizar
@@ -575,6 +637,7 @@ int main() {
             // Dibujar HUD
             window.draw(scoreText);
             window.draw(livesText);
+            window.draw(levelText);
         }
         else if (gameState == GAME_OVER) {
             // Reproducir sonido de Game Over si aún no se ha reproducido
