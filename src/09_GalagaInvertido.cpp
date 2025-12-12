@@ -4,6 +4,7 @@
 #include <cstdlib>
 #include <ctime>
 #include <string>
+#include <iostream>
 
 // Estados del juego
 enum GameState {
@@ -49,29 +50,41 @@ public:
 // Clase Jugador
 class Player {
 public:
-    sf::RectangleShape shape;
+    sf::Sprite sprite;
+    sf::Texture texture;
     float speed;
     int lives;
     sf::Clock shootCooldown;
     
     Player() {
-        shape.setSize(sf::Vector2f(40, 30));
-        shape.setPosition(380, 540);
-        shape.setFillColor(sf::Color::Cyan);
-        shape.setOutlineColor(sf::Color::White);
-        shape.setOutlineThickness(2);
+        // Cargar la textura desde la imagen
+        if (!texture.loadFromFile("docs/images/nave.png")) {
+            // Si falla la carga, mostrar error en consola
+            std::cerr << "Error: No se pudo cargar docs/images/nave.png" << std::endl;
+        }
+        
+        sprite.setTexture(texture);
+        
+        // Escalar la imagen para que tenga un tamaño apropiado (40x30 pixeles)
+        // Ajusta estos valores según el tamaño de tu imagen
+        float scaleX = 40.0f / texture.getSize().x;
+        float scaleY = 30.0f / texture.getSize().y;
+        sprite.setScale(scaleX, scaleY);
+        
+        sprite.setPosition(380, 540);
         speed = 6.0f;
         lives = 10;
     }
     
     void moveLeft() {
-        if (shape.getPosition().x > 0)
-            shape.move(-speed, 0);
+        if (sprite.getPosition().x > 0)
+            sprite.move(-speed, 0);
     }
     
     void moveRight() {
-        if (shape.getPosition().x + shape.getSize().x < 800)
-            shape.move(speed, 0);
+        sf::FloatRect bounds = sprite.getGlobalBounds();
+        if (sprite.getPosition().x + bounds.width < 800)
+            sprite.move(speed, 0);
     }
     
     bool canShoot() {
@@ -83,38 +96,40 @@ public:
     }
     
     sf::Vector2f getShootPosition() {
+        sf::FloatRect bounds = sprite.getGlobalBounds();
         return sf::Vector2f(
-            shape.getPosition().x + shape.getSize().x / 2 - 2,
-            shape.getPosition().y
+            sprite.getPosition().x + bounds.width / 2 - 2,
+            sprite.getPosition().y
         );
     }
     
     sf::FloatRect getBounds() {
-        return shape.getGlobalBounds();
+        return sprite.getGlobalBounds();
     }
-};
+}; // <-- ESTA LLAVE FALTABA
 
 // Clase Enemigo
 class Enemy {
 public:
-    sf::RectangleShape shape;
+    sf::Sprite sprite;
+    sf::Texture texture;
     int points;
     sf::Clock shootCooldown;
     
     Enemy(float x, float y, int row) {
-        shape.setSize(sf::Vector2f(30, 25));
-        shape.setPosition(x, y);
-        
-        // Diferentes colores según la fila
-        switch(row) {
-            case 0: shape.setFillColor(sf::Color(255, 150, 100)); break; // Naranja claro
-            case 1: shape.setFillColor(sf::Color(255, 200, 150)); break; // Durazno
-            case 2: shape.setFillColor(sf::Color(200, 150, 255)); break; // Morado claro
-            case 3: shape.setFillColor(sf::Color(150, 255, 150)); break; // Verde claro
+        // Cargar la textura desde la imagen
+        if (!texture.loadFromFile("assets/images/nave.png")) {
+            std::cerr << "Error: No se pudo cargar assets/images/nave.png" << std::endl;
         }
         
-        shape.setOutlineColor(sf::Color::White);
-        shape.setOutlineThickness(1);
+        sprite.setTexture(texture);
+        
+        // Escalar la imagen para que tenga un tamaño apropiado (30x25 pixeles)
+        float scaleX = 30.0f / texture.getSize().x;
+        float scaleY = 25.0f / texture.getSize().y;
+        sprite.setScale(scaleX, scaleY);
+        
+        sprite.setPosition(x, y);
         points = (row + 1) * 10;
     }
     
@@ -127,14 +142,15 @@ public:
     }
     
     sf::Vector2f getShootPosition() {
+        sf::FloatRect bounds = sprite.getGlobalBounds();
         return sf::Vector2f(
-            shape.getPosition().x + shape.getSize().x / 2 - 2,
-            shape.getPosition().y + shape.getSize().y
+            sprite.getPosition().x + bounds.width / 2 - 2,
+            sprite.getPosition().y + bounds.height
         );
     }
     
     sf::FloatRect getBounds() {
-        return shape.getGlobalBounds();
+        return sprite.getGlobalBounds();
     }
 };
 
@@ -274,7 +290,7 @@ int main() {
         
         // Reiniciar jugador
         player.lives = 10;
-        player.shape.setPosition(380, 540);
+        player.sprite.setPosition(380, 540);
         
         // Limpiar balas
         playerBullets.clear();
@@ -343,9 +359,10 @@ int main() {
             // Mover enemigos
             bool changeDirection = false;
             for (auto& enemy : enemies) {
-                enemy.shape.move(enemyMoveX, 0);
-                if (enemy.shape.getPosition().x <= 0 || 
-                    enemy.shape.getPosition().x + enemy.shape.getSize().x >= 800) {
+                enemy.sprite.move(enemyMoveX, 0);
+                sf::FloatRect bounds = enemy.sprite.getGlobalBounds();
+                if (enemy.sprite.getPosition().x <= 0 || 
+                    enemy.sprite.getPosition().x + bounds.width >= 800) {
                     changeDirection = true;
                 }
             }
@@ -353,7 +370,7 @@ int main() {
             if (changeDirection) {
                 enemyMoveX *= -1;
                 for (auto& enemy : enemies) {
-                    enemy.shape.move(0, 10); // Bajar un poco
+                    enemy.sprite.move(0, 10); // Bajar un poco
                 }
             }
             
@@ -456,7 +473,7 @@ int main() {
             
             // Verificar si los enemigos llegaron muy abajo
             for (auto& enemy : enemies) {
-                if (enemy.shape.getPosition().y > 520) {
+                if (enemy.sprite.getPosition().y > 520) {
                     gameState = GAME_OVER;
                     victory = false;
                 }
@@ -476,11 +493,11 @@ int main() {
         }
         else if (gameState == PLAYING) {
             // Dibujar jugador
-            window.draw(player.shape);
+            window.draw(player.sprite);
             
             // Dibujar enemigos
             for (auto& enemy : enemies) {
-                window.draw(enemy.shape);
+                window.draw(enemy.sprite);
             }
             
             // Dibujar bunkers
