@@ -223,7 +223,7 @@ int main() {
     srand(static_cast<unsigned>(time(0)));
     
     // Crear ventana
-    sf::RenderWindow window(sf::VideoMode(800, 600), "Galaga Invertido");
+    sf::RenderWindow window(sf::VideoMode(800, 600), "Human invaders");
     window.setFramerateLimit(60);
     
     // Cargar fuente
@@ -239,10 +239,30 @@ int main() {
         music.play();
     }
     
+    // Sonido de daño
+    sf::SoundBuffer damageBuffer;
+    damageBuffer.loadFromFile("assets/music/8-bit-cannon-fire-96505.mp3");
+    sf::Sound damageSound(damageBuffer);
+    
+    // Sonido de victoria
+    sf::Music victorySound;
+    victorySound.openFromFile("assets/music/victory-85561.mp3");
+    
+    // Sonido de Game Over
+    sf::Music gameOverSound;
+    gameOverSound.openFromFile("assets/music/dead-8bit-41400.mp3");
+    gameOverSound.setVolume(100);
+    
+    // Sonido de inicio
+    sf::Music startSound;
+    startSound.openFromFile("assets/music/game-start-6104.mp3");
+    startSound.setVolume(100);
+    
     // Estado del juego
     GameState gameState = MENU;
     int score = 0;
     bool victory = false;
+    bool gameOverSoundPlayed = false;
     
     // Jugador
     Player player;
@@ -263,8 +283,8 @@ int main() {
     titleText.setFont(font);
     titleText.setCharacterSize(50);
     titleText.setFillColor(sf::Color::Cyan);
-    titleText.setString("GALAGA INVERTIDO");
-    titleText.setPosition(200, 200);
+    titleText.setString("Human invaders");
+    titleText.setPosition(190, 200);
     
     sf::Text startText;
     startText.setFont(font);
@@ -299,20 +319,20 @@ int main() {
     victoryText.setCharacterSize(48);
     victoryText.setFillColor(sf::Color::Green);
     victoryText.setString("VICTORIA!");
-    victoryText.setPosition(280, 250);
+    victoryText.setPosition(300, 200);
     
     sf::Text finalScoreText;
     finalScoreText.setFont(font);
     finalScoreText.setCharacterSize(24);
     finalScoreText.setFillColor(sf::Color::White);
-    finalScoreText.setPosition(280, 330);
+    finalScoreText.setPosition(270, 310);
     
     sf::Text restartText;
     restartText.setFont(font);
     restartText.setCharacterSize(20);
     restartText.setFillColor(sf::Color::Yellow);
     restartText.setString("R: Reiniciar | ESC: Menu");
-    restartText.setPosition(250, 400);
+    restartText.setPosition(240, 400);
     
     // Función para inicializar el juego
     auto initGame = [&]() {
@@ -358,6 +378,7 @@ int main() {
             if (event.type == sf::Event::KeyPressed) {
                 // Desde el menú
                 if (gameState == MENU && event.key.code == sf::Keyboard::Enter) {
+                    startSound.play(); // Reproducir sonido de inicio
                     initGame();
                 }
                 
@@ -473,6 +494,7 @@ int main() {
             for (auto itBullet = enemyBullets.begin(); itBullet != enemyBullets.end();) {
                 if (itBullet->getBounds().intersects(player.getBounds())) {
                     player.lives--;
+                    damageSound.play(); // Reproducir sonido de daño
                     itBullet = enemyBullets.erase(itBullet);
                     if (player.lives <= 0) {
                         gameState = GAME_OVER;
@@ -502,6 +524,7 @@ int main() {
             if (enemies.empty() && score > 0) {
                 gameState = GAME_OVER;
                 victory = true;
+                victorySound.play(); // Reproducir sonido de victoria
             }
             
             // Verificar si los enemigos llegaron muy abajo
@@ -523,6 +546,7 @@ int main() {
         if (gameState == MENU) {
             window.draw(titleText);
             window.draw(startText);
+            gameOverSoundPlayed = false; // Reset para próximos Game Over
         }
         else if (gameState == PLAYING) {
             // Dibujar jugador
@@ -553,6 +577,12 @@ int main() {
             window.draw(livesText);
         }
         else if (gameState == GAME_OVER) {
+            // Reproducir sonido de Game Over si aún no se ha reproducido
+            if (!gameOverSoundPlayed && !victory) {
+                gameOverSound.play();
+                gameOverSoundPlayed = true;
+            }
+            
             if (victory) {
                 window.draw(victoryText);
             } else {
