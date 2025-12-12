@@ -58,9 +58,9 @@ public:
     
     Player() {
         // Cargar la textura desde la imagen
-        if (!texture.loadFromFile("docs/images/nave.png")) {
+        if (!texture.loadFromFile("assets/images/Nave.png")) {
             // Si falla la carga, mostrar error en consola
-            std::cerr << "Error: No se pudo cargar docs/images/nave.png" << std::endl;
+            std::cerr << "Error: No se pudo cargar assets/images/Nave.png" << std::endl;
         }
         
         sprite.setTexture(texture);
@@ -124,10 +124,10 @@ public:
     
     static void loadTextures() {
         if (!texturesLoaded) {
-            texture0.loadFromFile("docs/images/Human 1.png");
-            texture1.loadFromFile("docs/images/Human 2.png");
-            texture2.loadFromFile("docs/images/Human 3.png");
-            texture3.loadFromFile("docs/images/human 4.png");
+            texture0.loadFromFile("assets/images/Human 1.png");
+            texture1.loadFromFile("assets/images/Human 2.png");
+            texture2.loadFromFile("assets/images/Human 3.png");
+            texture3.loadFromFile("assets/images/human 4.png");
             texturesLoaded = true;
         }
     }
