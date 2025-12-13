@@ -1,4 +1,4 @@
-# Galaga Invertido - Proyecto Final
+# Human Invaders - Proyecto Final
 
 Este proyecto es una implementación del juego " Space invaders" desarrollado en C++ utilizando la biblioteca SFML y Box2D. El desarrollo se realiza sobre MinGW64 utilizando Msys2 y Visual Studio Code.
 
