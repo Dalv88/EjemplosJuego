@@ -1,6 +1,6 @@
 # Galaga Invertido - Proyecto Final
 
-Este proyecto es una implementación del juego "Galaga Invertido" desarrollado en C++ utilizando la biblioteca SFML y Box2D. El desarrollo se realiza sobre MinGW64 utilizando Msys2 y Visual Studio Code.
+Este proyecto es una implementación del juego " Space invaders" desarrollado en C++ utilizando la biblioteca SFML y Box2D. El desarrollo se realiza sobre MinGW64 utilizando Msys2 y Visual Studio Code.
 
 ---
 
@@ -76,7 +76,7 @@ Si prefieres usar la terminal integrada de Visual Studio Code:
 1. Abre la terminal en la carpeta `EjemplosJuego`.
 2. Ejecuta el siguiente comando:
    ```bash
-   make run09_GalagaInvertido
+   make runJuegoProyecto252
    ```
    *(Nota: Asegúrate de que el Makefile esté configurado correctamente para este target).*
 
@@ -89,11 +89,11 @@ Si necesitas recompilar manualmente:
    ```
 3. Compila con g++:
    ```powershell
-   g++ src/09_GalagaInvertido.cpp -o bin/09_GalagaInvertido.exe -lsfml-graphics -lsfml-window -lsfml-system -lsfml-audio -lbox2d -Iinclude
+   g++ src/JuegoProyecto252.cpp -o bin/JuegoProyecto252.exe -lsfml-graphics -lsfml-window -lsfml-system -lsfml-audio -lbox2d -Iinclude
    ```
 4. Ejecuta:
    ```powershell
-   ./bin/09_GalagaInvertido.exe
+   ./bin/JuegoProyecto252.exe
    ```
 
 ---
@@ -103,12 +103,12 @@ Si necesitas recompilar manualmente:
 ### Errores Comunes
 
 **1. El juego se cierra o muestra "Game Over" inmediatamente:**
-*   **Solución:** Asegúrate de estar ejecutando la versión más reciente (`09_GalagaInvertido`). Versiones anteriores tenían un bug donde los enemigos tocaban el borde inferior muy rápido.
+*   **Solución:** Asegúrate de estar ejecutando la versión más reciente (`JuegoProyecto252`). Versiones anteriores tenían un bug donde los enemigos tocaban el borde inferior muy rápido.
 *   Recompila el proyecto (`make clean` seguido de `make...` o borra el `.exe` y recompila).
 
 **2. No veo mi nave o las texturas:**
 *   **Causa:** El ejecutable no encuentra la carpeta `assets`.
-*   **Solución:** Asegúrate de ejecutar el juego desde la carpeta `EjemplosJuego`. Si ejecutas desde `bin/`, el programa buscará `assets` dentro de `bin/` y fallará. Siempre ejecuta desde la raíz del proyecto: `./bin/09_GalagaInvertido.exe`.
+*   **Solución:** Asegúrate de ejecutar el juego desde la carpeta `EjemplosJuego`. Si ejecutas desde `bin/`, el programa buscará `assets` dentro de `bin/` y fallará. Siempre ejecuta desde la raíz del proyecto: `./bin/JuegoProyecto252.exe`.
 
 **3. "No rule to make target":**
 *   Verifica que el nombre del archivo en el comando `make` coincida con el target en el `makefile`.
